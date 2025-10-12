@@ -1,0 +1,23 @@
+# BioMind Voice Lab Environment Variables Template
+# Copy this to .env and fill in your actual values
+
+# GCP Configuration (Already set correctly)
+GCP_PROJECT_ID=trusty-frame-474816-m0
+GOOGLE_CLOUD_PROJECT=trusty-frame-474816-m0
+BIGQUERY_DATASET=biomind_data
+
+# Connector Enable/Disable Flags
+ENABLE_PUBMED=true
+ENABLE_UNIPROT=true
+ENABLE_DRUGBANK=false
+ENABLE_GOOGLE_HEALTH_BLOG=false
+
+# API Keys and Authentication
+PUBMED_EMAIL=your-actual-email@domain.com
+DRUGBANK_API_KEY=your-actual-drugbank-api-key-here
+
+# Optional: Google Health Blog (not currently used in real-time mode)
+GOOGLE_HEALTH_BLOG_API_KEY=your-google-health-api-key
+
+# Application Default Credentials (set via gcloud auth)
+# GOOGLE_APPLICATION_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json
