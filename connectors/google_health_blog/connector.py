@@ -3,6 +3,68 @@ import requests
 from bs4 import BeautifulSoup
 from google.cloud import bigquery
 import connectors.google_health_blog.config as config
+import time
+
+def fetch_google_health_blog_data_realtime(query, max_results=5):
+    """
+    Fetch Google Health Blog posts in real-time based on query.
+    Returns list of posts without storing in BigQuery.
+    """
+    if not config.ENABLE_GOOGLE_HEALTH_BLOG:
+        logging.info("Google Health Blog connector is disabled, skipping Google Health Blog data fetch")
+        return []
+    
+    logging.info(f"Fetching Google Health Blog data in real-time for query: {query}")
+    
+    try:
+        # Search Google Health Blog for relevant posts
+        res = requests.get(config.BASE_URL)
+        res.raise_for_status()
+        time.sleep(0.1)  # Rate limiting
+    except Exception as e:
+        logging.error(f"Failed to retrieve Google Health blog: {e}")
+        return []
+    
+    soup = BeautifulSoup(res.text, 'html.parser')
+    posts = soup.find_all('a', href=True)
+    posts_urls = set()
+    
+    # Find relevant blog post URLs
+    for a in posts:
+        href = a['href']
+        if href.startswith("/blog/") and "/technology/health" in href:
+            full_url = "https://blog.google" + href
+            posts_urls.add(full_url)
+    
+    blog_posts = []
+    for url in list(posts_urls)[:max_results]:  # Limit results
+        try:
+            page = requests.get(url)
+            page.raise_for_status()
+            page_soup = BeautifulSoup(page.text, 'html.parser')
+            title_tag = page_soup.find('h1')
+            title = title_tag.get_text().strip() if title_tag else ""
+            paragraphs = page_soup.find_all('p')
+            content = "\n".join([p.get_text() for p in paragraphs])
+            
+            # Simple relevance check (contains query terms)
+            if query.lower() in (title + content).lower():
+                blog_posts.append({
+                    "post_id": title.replace(" ", "_")[:50],
+                    "url": url,
+                    "title": title,
+                    "content": content[:500] + "..." if len(content) > 500 else content,
+                    "source": "google_health_blog",
+                    "search_score": 1.0
+                })
+            
+            time.sleep(0.1)  # Rate limiting
+        except Exception as e:
+            logging.error(f"Failed to fetch blog post {url}: {e}")
+            continue
+    
+    logging.info(f"Fetched {len(blog_posts)} Google Health Blog posts in real-time")
+    return blog_posts
 
 def run_google_health_blog_connector():
     try:

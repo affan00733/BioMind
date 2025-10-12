@@ -1,6 +1,6 @@
 import logging
 import requests
-from google import genai
+import google.generativeai as genai
 from utils.config_utils import get_config
 
 def get_esm2_embedding(sequence):
@@ -18,9 +18,7 @@ def analyze_protein_with_medgemma(protein_info):
     Use MedGemma Bio to analyze protein information and predict functions.
     """
     logging.info("Analyzing protein with MedGemma Bio")
-    client = genai.Client(vertexai=True,
-                          project=get_config('PROJECT_ID'),
-                          location="us-central1")
+    genai.configure(project=get_config('PROJECT_ID'), location="us-central1")
     
     name = protein_info.get("protein_name", "")
     genes = protein_info.get("genes", "")
@@ -41,11 +39,9 @@ def analyze_protein_with_medgemma(protein_info):
     """
     
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents=[prompt]
-        )
-        return response.candidates[0].content.parts[0].text
+        model = genai.GenerativeModel("gemini-2.5-flash-lite")
+        response = model.generate_content(prompt)
+        return response.text
     except Exception as e:
         logging.error(f"MedGemma Bio analysis failed: {e}")
         return f"Protein {name} analysis failed"

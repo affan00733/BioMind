@@ -9,6 +9,10 @@ def fetch_pubmed_data_realtime(query, max_results=10):
     Fetch PubMed articles in real-time based on query.
     Returns list of articles without storing in BigQuery.
     """
+    if not config.ENABLE_PUBMED:
+        logging.info("PubMed connector is disabled, skipping PubMed data fetch")
+        return []
+    
     logging.info(f"Fetching PubMed data in real-time for query: {query}")
     Entrez.email = config.PUBMED_EMAIL
     

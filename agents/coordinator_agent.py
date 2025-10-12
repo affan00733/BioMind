@@ -19,10 +19,11 @@ class CoordinatorAgent:
         docs = retrieve_relevant_docs(question)
         logging.info(f"Retrieved {len(docs)} documents from data sources")
 
-        # Separate documents by type (PubMed articles, UniProt entries, DrugBank entries)
+        # Separate documents by type (PubMed articles, UniProt entries, DrugBank entries, Google Health Blog posts)
         lit_papers = [d for d in docs if d.get('source') == 'pubmed_articles' and d.get('abstract')]
         uniprot_entries = [d for d in docs if d.get('source') == 'uniprot_records' and d.get('protein_name')]
         drug_entries = [d for d in docs if d.get('source') == 'drugbank_entries' and d.get('name')]
+        google_health_posts = [d for d in docs if d.get('source') == 'google_health_blog' and d.get('content')]
 
         # Summarize literature
         lit_summaries = []
@@ -41,6 +42,12 @@ class CoordinatorAgent:
         if drug_entries:
             drugs = [{"name": d.get("name", ""), "indication": d.get("indication", "")} for d in drug_entries]
             drug_info = analyze_drugs(drugs)
+
+        # Process Google Health Blog posts (add to literature analysis)
+        if google_health_posts:
+            google_health_papers = [{"title": d.get("title", ""), "abstract": d.get("content", "")} for d in google_health_posts]
+            google_health_summaries = summarize_papers(google_health_papers)
+            lit_summaries.extend(google_health_summaries)
 
         # Placeholder for image info (not implemented in pipeline)
         image_info = ""

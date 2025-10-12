@@ -1,5 +1,8 @@
 import os
 
+# Enable/Disable flag for DrugBank connector
+ENABLE_DRUGBANK = os.getenv("ENABLE_DRUGBANK", "false").lower() == "true"
+
 DRUGBANK_API_KEY = os.getenv("DRUGBANK_API_KEY", "")
 QUERY = "aspirin"
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", "trusty-frame-474816-m0")

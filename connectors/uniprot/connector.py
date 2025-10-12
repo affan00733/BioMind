@@ -11,6 +11,10 @@ def fetch_uniprot_data_realtime(query, max_results=10):
     Fetch UniProt protein data in real-time based on query.
     Returns list of proteins without storing in BigQuery.
     """
+    if not config.ENABLE_UNIPROT:
+        logging.info("UniProt connector is disabled, skipping UniProt data fetch")
+        return []
+    
     logging.info(f"Fetching UniProt data in real-time for query: {query}")
     
     params = {

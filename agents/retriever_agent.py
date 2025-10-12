@@ -7,22 +7,36 @@ from utils.cache_utils import api_cache
 import connectors.pubmed.connector as pubmed_connector
 import connectors.uniprot.connector as uniprot_connector
 import connectors.drugbank.connector as drugbank_connector
+import connectors.google_health_blog.connector as google_health_connector
 
 def embed_text(text):
-    """Generate embedding for text using Vertex AI."""
-    client = genai.Client(vertexai=True,
-                          project=get_config('PROJECT_ID'),
-                          location="us-central1")
+    """Generate embedding for text using Vertex AI Gemini embeddings."""
+    from google import genai
+    from utils.config_utils import get_config
+    import logging
+
     try:
+        # ✅ Create Vertex AI client using new SDK
+        client = genai.Client(
+            vertexai=True,
+            project=get_config("PROJECT_ID"),
+            location="us-central1"
+        )
+
+        # ✅ Correct embedding model and parameter name (confirmed)
         response = client.models.embed_content(
-            model="textembedding-gecko@003",
+            model="gemini-embedding-001",
             contents=[text]
         )
+
         embedding = response.embeddings[0].values
         return embedding
+
     except Exception as e:
         logging.error(f"Embedding generation failed: {e}")
         return None
+
+
 
 def create_vertex_matching_engine_index():
     """
@@ -108,12 +122,15 @@ def search_with_bigquery_vectors(query, query_embedding, top_k=20):
                 logging.warning(f"Vector search failed for {table_name}: {e}")
                 # Fallback to keyword search
                 try:
-                    keyword_results = bq_client.query(
+                    # Build WHERE clause separately to avoid f-string backslash issue
+                    where_conditions = ' OR '.join([f"{field} LIKE '%{query}%'" for field in config['fields']])
+                    keyword_query = (
                         f"SELECT *, 0.5 AS search_score, '{table_name}' AS source "
                         f"FROM `{table_ref}` "
-                        f"WHERE {' OR '.join([f'{field} LIKE \"%{query}%\"' for field in config['fields']])} "
+                        f"WHERE {where_conditions} "
                         f"LIMIT {top_k}"
-                    ).result()
+                    )
+                    keyword_results = bq_client.query(keyword_query).result()
                     
                     for row in keyword_results:
                         candidates.append(dict(row))
@@ -131,6 +148,24 @@ def fetch_data_realtime(query, max_results_per_source=5):
     Returns combined results from PubMed, UniProt, and DrugBank.
     """
     logging.info(f"Fetching real-time data for query: {query}")
+    
+    # Log which connectors are enabled
+    import connectors.pubmed.config as pubmed_config
+    import connectors.uniprot.config as uniprot_config
+    import connectors.drugbank.config as drugbank_config
+    import connectors.google_health_blog.config as google_health_config
+    
+    enabled_connectors = []
+    if pubmed_config.ENABLE_PUBMED:
+        enabled_connectors.append("PubMed")
+    if uniprot_config.ENABLE_UNIPROT:
+        enabled_connectors.append("UniProt")
+    if drugbank_config.ENABLE_DRUGBANK:
+        enabled_connectors.append("DrugBank")
+    if google_health_config.ENABLE_GOOGLE_HEALTH_BLOG:
+        enabled_connectors.append("Google Health Blog")
+    
+    logging.info(f"Enabled connectors: {', '.join(enabled_connectors) if enabled_connectors else 'None'}")
     
     all_candidates = []
     
@@ -179,6 +214,21 @@ def fetch_data_realtime(query, max_results_per_source=5):
         all_candidates.extend(drugbank_data)
     except Exception as e:
         logging.error(f"DrugBank real-time fetch failed: {e}")
+    
+    # Fetch from Google Health Blog with caching
+    try:
+        cached_google_health = api_cache.get(query, "google_health_blog")
+        if cached_google_health:
+            google_health_data = cached_google_health
+            logging.info(f"Using cached Google Health Blog data: {len(google_health_data)} posts")
+        else:
+            google_health_data = google_health_connector.fetch_google_health_blog_data_realtime(query, max_results_per_source)
+            api_cache.set(query, "google_health_blog", google_health_data)
+            logging.info(f"Fetched and cached {len(google_health_data)} Google Health Blog posts")
+        
+        all_candidates.extend(google_health_data)
+    except Exception as e:
+        logging.error(f"Google Health Blog real-time fetch failed: {e}")
     
     logging.info(f"Total real-time data fetched: {len(all_candidates)} items")
     return all_candidates

@@ -1,7 +1,7 @@
 import logging
 import base64
 from google.cloud import vision
-from google import genai
+import google.generativeai as genai
 from utils.config_utils import get_config
 
 def analyze_image_with_medgemma_vision(image_path):
@@ -40,16 +40,18 @@ def analyze_image_with_medgemma_vision(image_path):
         ]
         
         # Use Gemini for multimodal analysis (MedGemma Vision equivalent)
-        client = genai.Client(vertexai=True,
-                              project=get_config('PROJECT_ID'),
-                              location="us-central1")
+        genai.configure(project=get_config('PROJECT_ID'), location="us-central1")
         
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents=multimodal_content
-        )
+        model = genai.GenerativeModel("gemini-2.5-flash-lite")
         
-        return response.candidates[0].content.parts[0].text
+        # Prepare the image for the model
+        image_part = {
+            "mime_type": "image/jpeg",
+            "data": image_data
+        }
+        
+        response = model.generate_content([prompt, image_part])
+        return response.text
         
     except Exception as e:
         logging.error(f"MedGemma Vision analysis failed: {e}")

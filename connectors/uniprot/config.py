@@ -1,5 +1,8 @@
 import os
 
+# Enable/Disable flag for UniProt connector
+ENABLE_UNIPROT = os.getenv("ENABLE_UNIPROT", "true").lower() == "true"
+
 UNIPROT_BASE_URL = "https://rest.uniprot.org/uniprotkb/search"
 QUERY = "organism_id:9606"
 MAX_RESULTS = 5

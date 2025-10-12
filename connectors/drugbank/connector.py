@@ -10,6 +10,10 @@ def fetch_drugbank_data_realtime(query, max_results=10):
     Fetch DrugBank drug data in real-time based on query.
     Returns list of drugs without storing in BigQuery.
     """
+    if not config.ENABLE_DRUGBANK:
+        logging.info("DrugBank connector is disabled, skipping DrugBank data fetch")
+        return []
+    
     logging.info(f"Fetching DrugBank data in real-time for query: {query}")
     
     if not config.DRUGBANK_API_KEY:

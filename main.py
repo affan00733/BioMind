@@ -10,8 +10,20 @@ def main():
     print("🧠 BioMind Voice Lab - Real-Time Biomedical Research Assistant")
     print("=" * 60)
     print("🔴 REAL-TIME MODE: Fetching fresh data from APIs")
-    print("📚 Sources: PubMed, UniProt, DrugBank")
     print("⚡ Caching enabled for 5 minutes to optimize performance")
+    
+    # Show connector status
+    import os
+    enable_pubmed = os.getenv("ENABLE_PUBMED", "true").lower() == "true"
+    enable_uniprot = os.getenv("ENABLE_UNIPROT", "true").lower() == "true"
+    enable_drugbank = os.getenv("ENABLE_DRUGBANK", "false").lower() == "true"
+    enable_google_health = os.getenv("ENABLE_GOOGLE_HEALTH_BLOG", "false").lower() == "true"
+    
+    print("📚 Active Data Sources:")
+    print(f"   📖 PubMed: {'🟢 ENABLED' if enable_pubmed else '🔴 DISABLED'}")
+    print(f"   🧬 UniProt: {'🟢 ENABLED' if enable_uniprot else '🔴 DISABLED'}")
+    print(f"   💊 DrugBank: {'🟢 ENABLED' if enable_drugbank else '🔴 DISABLED'}")
+    print(f"   🏥 Google Health Blog: {'🟢 ENABLED' if enable_google_health else '🔴 DISABLED'}")
     print("=" * 60)
     
     while True:
