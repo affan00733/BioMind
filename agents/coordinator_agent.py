@@ -15,9 +15,18 @@ class CoordinatorAgent:
 
     def run_pipeline(self, question: str):
         logging.info(f"Running pipeline for question: {question}")
-        # Retrieve relevant documents from BigQuery
+        # Retrieve relevant documents from data sources
         docs = retrieve_relevant_docs(question)
         logging.info(f"Retrieved {len(docs)} documents from data sources")
+
+        # If we have no evidence at all, return a helpful prompt instead of a speculative hypothesis
+        if not docs:
+            guidance = (
+                "No evidence was retrieved from the enabled sources for this question. "
+                "Try refining your query with more specific biomedical keywords (e.g., a condition, biomarker, or pathway), "
+                "or type 'help' to see example queries."
+            )
+            return guidance, 0.0
 
         # Separate documents by type (PubMed articles, UniProt entries, DrugBank entries, Google Health Blog posts)
         lit_papers = [d for d in docs if d.get('source') == 'pubmed_articles' and d.get('abstract')]

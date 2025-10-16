@@ -95,15 +95,22 @@ def search_with_bigquery_vectors(query, query_embedding, top_k=20):
     
     for table_name, config in search_config.items():
         table_ref = f"{get_config('PROJECT_ID')}.{dataset}.{table_name}"
+
+        # Check table existence first to avoid 404 errors
+        try:
+            bq_client.get_table(table_ref)
+        except Exception:
+            logging.info(f"Skipping BigQuery search for {table_name}: table {table_ref} not found.")
+            continue
         
         if query_embedding:
             try:
-                # Enhanced vector similarity search with field weighting
+                # Use VECTOR_DISTANCE for wider compatibility; compute similarity as 1 - distance
                 query_str = f"""
                 SELECT 
                     *,
-                    embedding <=> ARRAY{query_embedding} AS similarity_score,
-                    ({config['weight']} * (1 - (embedding <=> ARRAY{query_embedding}))) AS weighted_score
+                    SAFE.VECTOR_DISTANCE(embedding, ARRAY{query_embedding}, 'COSINE') AS distance,
+                    ({config['weight']} * (1 - SAFE.VECTOR_DISTANCE(embedding, ARRAY{query_embedding}, 'COSINE'))) AS weighted_score
                 FROM `{table_ref}`
                 WHERE embedding IS NOT NULL
                 ORDER BY weighted_score DESC
@@ -115,7 +122,7 @@ def search_with_bigquery_vectors(query, query_embedding, top_k=20):
                     # Add source information
                     row_dict = dict(row)
                     row_dict['source'] = table_name
-                    row_dict['search_score'] = row_dict['weighted_score']
+                    row_dict['search_score'] = row_dict.get('weighted_score', 0)
                     candidates.append(row_dict)
                     
             except Exception as e:

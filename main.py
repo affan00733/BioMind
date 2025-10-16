@@ -25,17 +25,50 @@ def main():
     print(f"   💊 DrugBank: {'🟢 ENABLED' if enable_drugbank else '🔴 DISABLED'}")
     print(f"   🏥 Google Health Blog: {'🟢 ENABLED' if enable_google_health else '🔴 DISABLED'}")
     print("=" * 60)
+
+    # Example queries helper (so users know what to ask)
+    def _print_examples():
+        print("\n💡 Example biomedical queries you can try:")
+        print("   • Summarize the latest research on long COVID and neurological effects")
+        print("   • What biomarkers are associated with early-stage Alzheimer's disease?")
+        print("   • How does intermittent fasting impact inflammatory pathways?")
+        print("   • Generate a testable hypothesis on gut microbiome and anxiety")
+        if enable_pubmed:
+            print("\n📖 PubMed-focused:")
+            print("   • What are recent clinical trial findings for GLP-1 agonists in NASH?")
+            print("   • Find emerging risk factors for post-viral myocarditis")
+        if enable_uniprot:
+            print("\n🧬 Protein/UniProt-focused:")
+            print("   • Which proteins interact with ACE2 and how might that affect viral entry?")
+            print("   • List UniProt annotations for TP53 variants relevant to cancer")
+        if enable_drugbank:
+            print("\n💊 Drug/DrugBank-focused:")
+            print("   • Compare mechanism and adverse effects of metformin vs. pioglitazone")
+            print("   • Identify potential drug–drug interactions for Paxlovid")
+        if enable_google_health:
+            print("\n🏥 Public health/news (Google Health Blog):")
+            print("   • Summarize recent public health guidance on RSV vaccines")
+        print("\nTip: Type 'help' to see these examples again.")
+
+    # Show initial examples
+    _print_examples()
     
     while True:
         try:
-            question = input("\n🔬 Enter your biomedical question (or 'quit' to exit): ")
+            question = input("\n🔬 Enter your biomedical question (type 'help' for examples, or 'quit' to exit): ")
             
             if question.lower() in ['quit', 'exit', 'q']:
                 print("👋 Goodbye!")
                 break
+            
+            # Show examples on demand
+            if question.strip().lower() in ['help', 'examples', '?']:
+                _print_examples()
+                continue
                 
             if not question.strip():
                 print("❌ Please enter a valid question.")
+                _print_examples()
                 continue
             
             print(f"\n🚀 Processing: '{question}'")

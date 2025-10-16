@@ -1,6 +1,6 @@
 import logging
 import requests
-import google.generativeai as genai
+from google import genai
 from utils.config_utils import get_config
 
 def query_drugbank_api(drug_name):
@@ -20,10 +20,16 @@ def query_drugbank_api(drug_name):
 
 def analyze_drug_targets_with_gemini(drug_info, drugbank_data):
     """
-    Use Gemini Pro for advanced drug-target reasoning and mechanism analysis.
+    Use Gemini (Flash-Lite) for advanced drug-target reasoning and mechanism analysis.
+    Updated to use the new google.genai Client API.
     """
     logging.info("Analyzing drug targets with Gemini Pro")
-    genai.configure(project=get_config('PROJECT_ID'), location="us-central1")
+
+    client = genai.Client(
+        vertexai=True,
+        project=get_config('PROJECT_ID'),
+        location="us-central1"
+    )
     
     name = drug_info.get("name", "")
     indication = drug_info.get("indication", "")
@@ -45,9 +51,11 @@ def analyze_drug_targets_with_gemini(drug_info, drugbank_data):
     """
     
     try:
-        model = genai.GenerativeModel("gemini-2.5-flash-lite")
-        response = model.generate_content(prompt)
-        return response.text
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=[prompt]
+        )
+        return response.candidates[0].content.parts[0].text
     except Exception as e:
         logging.error(f"Gemini Pro drug analysis failed: {e}")
         return f"Drug {name} analysis failed"

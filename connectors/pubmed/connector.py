@@ -27,8 +27,33 @@ def fetch_pubmed_data_realtime(query, max_results=10):
         return []
 
     if not pmids:
-        logging.info("No PubMed IDs found for query.")
-        return []
+        logging.info("No PubMed IDs found for query. Trying keywordized fallback search in Title/Abstract...")
+        # Simple keywordization fallback for natural language queries
+        import re
+        text = query.lower()
+        # Keep words with letters/numbers and basic hyphens
+        tokens = re.findall(r"[a-z0-9][a-z0-9\-]+", text)
+        stop = {
+            'the','a','an','and','or','on','in','of','to','for','with','by','about','latest','research','study','studies','effects','effect','impact','what','are','is','how'
+        }
+        keywords = [t for t in tokens if t not in stop][:8]
+        # If we still have nothing, bail out early
+        if not keywords:
+            return []
+        # Build Title/Abstract query
+        ta_terms = [f'"{kw}"[Title/Abstract]' if '-' in kw else f'{kw}[Title/Abstract]' for kw in keywords]
+        fallback_term = ' OR '.join(ta_terms)
+        try:
+            handle = Entrez.esearch(db="pubmed", term=fallback_term, retmax=max_results)
+            record = Entrez.read(handle)
+            pmids = record.get("IdList", [])
+            time.sleep(0.1)
+        except Exception as e:
+            logging.error(f"PubMed fallback search failed: {e}")
+            return []
+        if not pmids:
+            logging.info("Fallback PubMed search also returned 0 IDs.")
+            return []
 
     articles = []
     for pmid in pmids:

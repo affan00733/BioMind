@@ -1,7 +1,7 @@
 import logging
 import base64
 from google.cloud import vision
-import google.generativeai as genai
+from google import genai
 from utils.config_utils import get_config
 
 def analyze_image_with_medgemma_vision(image_path):
@@ -15,43 +15,35 @@ def analyze_image_with_medgemma_vision(image_path):
         with open(image_path, "rb") as image_file:
             image_data = base64.b64encode(image_file.read()).decode('utf-8')
         
-        # Create multimodal content for MedGemma Vision
-        multimodal_content = [
-            {
-                "text": """
-                Analyze this biomedical image and provide detailed interpretation:
-                
-                1. **Image Type**: Identify the type of biomedical visualization (microscopy, X-ray, MRI, etc.)
-                2. **Anatomical/Structural Elements**: Describe visible structures, cells, tissues, or organs
-                3. **Pathological Features**: Identify any abnormalities, lesions, or disease markers
-                4. **Quantitative Analysis**: Measure dimensions, counts, or other measurable features
-                5. **Clinical Significance**: Interpret findings in medical context
-                6. **Research Implications**: Suggest research directions or hypotheses
-                
-                Focus on biomedical accuracy and clinical relevance.
-                """
-            },
-            {
-                "inline_data": {
-                    "mime_type": "image/jpeg",
-                    "data": image_data
-                }
-            }
-        ]
-        
-        # Use Gemini for multimodal analysis (MedGemma Vision equivalent)
-        genai.configure(project=get_config('PROJECT_ID'), location="us-central1")
-        
-        model = genai.GenerativeModel("gemini-2.5-flash-lite")
-        
+        # Build prompt and initialize GenAI client (new SDK)
+        prompt = (
+            "Analyze this biomedical image and provide detailed interpretation:\n\n"
+            "1. Image Type: Identify the type of biomedical visualization (microscopy, X-ray, MRI, etc.)\n"
+            "2. Anatomical/Structural Elements: Describe visible structures, cells, tissues, or organs\n"
+            "3. Pathological Features: Identify any abnormalities, lesions, or disease markers\n"
+            "4. Quantitative Analysis: Measure dimensions, counts, or other measurable features\n"
+            "5. Clinical Significance: Interpret findings in medical context\n"
+            "6. Research Implications: Suggest research directions or hypotheses\n\n"
+            "Focus on biomedical accuracy and clinical relevance."
+        )
+
+        client = genai.Client(
+            vertexai=True,
+            project=get_config('PROJECT_ID'),
+            location="us-central1"
+        )
+
         # Prepare the image for the model
         image_part = {
             "mime_type": "image/jpeg",
             "data": image_data
         }
-        
-        response = model.generate_content([prompt, image_part])
-        return response.text
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-lite",
+            contents=[prompt, image_part]
+        )
+        return response.candidates[0].content.parts[0].text
         
     except Exception as e:
         logging.error(f"MedGemma Vision analysis failed: {e}")

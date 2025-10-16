@@ -17,10 +17,18 @@ def fetch_uniprot_data_realtime(query, max_results=10):
     
     logging.info(f"Fetching UniProt data in real-time for query: {query}")
     
+    def _keywordize(q):
+        import re
+        toks = re.findall(r"[A-Za-z0-9][A-Za-z0-9\-]+", q.lower())
+        stop = {'the','a','an','and','or','on','in','of','to','for','with','by','about','what','are','is','how','latest','research'}
+        kws = [t for t in toks if t not in stop][:6]
+        return kws
+    
+    # First attempt: as-is (may work if user already provided protein/gene terms)
     params = {
         "query": query,
         "format": "tsv",
-        "fields": "accession,protein_name,genes,sequence",
+        "fields": "accession,protein_name,gene_names,sequence",
         "size": max_results
     }
     
@@ -33,7 +41,28 @@ def fetch_uniprot_data_realtime(query, max_results=10):
         logging.error(f"UniProt API request failed: {e}")
         return []
 
-    if not text:
+    # Fallback: keywordized query constrained to reviewed human proteins
+    if not text or text.splitlines().__len__() <= 1:
+        kws = _keywordize(query)
+        if kws:
+            or_terms = ' OR '.join(kws)
+            smart_query = f"(reviewed:true) AND (organism_id:9606) AND ({or_terms})"
+            logging.info(f"Retrying UniProt with keywordized query: {smart_query}")
+            try:
+                resp2 = requests.get(config.UNIPROT_BASE_URL, params={
+                    "query": smart_query,
+                    "format": "tsv",
+                    "fields": "accession,protein_name,gene_names,sequence",
+                    "size": max_results
+                })
+                resp2.raise_for_status()
+                text = resp2.text.strip()
+                time.sleep(0.1)
+            except Exception as e:
+                logging.error(f"UniProt API retry failed: {e}")
+                return []
+
+    if not text or text.splitlines().__len__() <= 1:
         logging.info("No UniProt data retrieved.")
         return []
 
@@ -59,7 +88,7 @@ def run_uniprot_connector():
     params = {
         "query": config.QUERY,
         "format": "tsv",
-        "fields": "accession,protein_name,genes,sequence",
+        "fields": "accession,protein_name,gene_names,sequence",
         "size": config.MAX_RESULTS
     }
     try:
