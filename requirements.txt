@@ -1,0 +1,45 @@
+# Core Google Cloud dependencies
+google-cloud-bigquery
+google-cloud-aiplatform
+google-cloud-storage
+google-cloud-vision
+vertexai
+
+# Google GenAI SDK
+google-generativeai
+
+# Data processing and analysis
+pandas
+numpy
+biopython
+
+# Web scraping and API calls
+requests
+beautifulsoup4
+urllib3
+
+# Fivetran connector SDK
+fivetran-connector-sdk
+
+# Text processing and NLP
+nltk
+scikit-learn
+transformers
+
+# Image processing
+Pillow
+opencv-python
+
+# Utilities
+python-dotenv
+pyyaml
+tqdm
+
+# Development and testing
+pytest
+pytest-cov
+black
+flake8
+
+# Logging and monitoring
+structlog
