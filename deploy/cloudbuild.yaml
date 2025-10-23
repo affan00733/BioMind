@@ -1,0 +1,31 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build image'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$SERVICE', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push image'
+    args: ['push', 'gcr.io/$PROJECT_ID/$SERVICE']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'Deploy to Cloud Run'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud run deploy "$SERVICE" \
+          --image "gcr.io/$PROJECT_ID/$SERVICE" \
+          --region "$REGION" \
+          --platform managed \
+          --allow-unauthenticated \
+          --project "$PROJECT_ID" \
+          --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT_ID,LOCATION=$REGION,DATAPOINTS_GCS=$DATAPOINTS_GCS,MATCHING_ENGINE_INDEX_ENDPOINT=$MATCHING_ENGINE_INDEX_ENDPOINT,MATCHING_ENGINE_DEPLOYED_INDEX_ID=$MATCHING_ENGINE_DEPLOYED_INDEX_ID"
+
+substitutions:
+  _SERVICE: "biomind-runner"
+  _REGION: "us-central1"
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+
+timeout: '1200s'

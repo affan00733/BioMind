@@ -1,0 +1,14 @@
+Collecting pypdf
+  Downloading pypdf-6.1.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting python-docx
+  Downloading python_docx-1.2.0-py3-none-any.whl.metadata (2.0 kB)
+Requirement already satisfied: typing_extensions>=4.0 in ./BioMind/.venv/lib/python3.9/site-packages (from pypdf) (4.15.0)
+Collecting lxml>=3.1.0 (from python-docx)
+  Downloading lxml-6.0.2-cp39-cp39-macosx_10_9_universal2.whl.metadata (3.6 kB)
+Downloading pypdf-6.1.1-py3-none-any.whl (323 kB)
+Downloading python_docx-1.2.0-py3-none-any.whl (252 kB)
+Downloading lxml-6.0.2-cp39-cp39-macosx_10_9_universal2.whl (8.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.6/8.6 MB 41.9 MB/s  0:00:00
+Installing collected packages: pypdf, lxml, python-docx
+
+Successfully installed lxml-6.0.2 pypdf-6.1.1 python-docx-1.2.0

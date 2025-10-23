@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS variable tokens */
+:root {
+  --bg: #f7f9fc;
+  --surface: #ffffff;
+  --text: #0b1324;
+  --muted: #4b5563;
+  --border: #e6eaf0;
+  --accent: #4285F4;
+  --focus: rgba(66,133,244,0.4);
+}
+
+/* Dark theme overrides */
+:root[data-theme="dark"] {
+  /* Darker, near-black scheme */
+  --bg: #0a0a0a;          /* page background (almost black) */
+  --surface: #0e0f12;     /* cards/panels slightly lifted from bg */
+  --text: #f3f4f6;        /* off-white for strong contrast */
+  --muted: #9aa3b4;       /* softer secondary text */
+  --border: #1a1d24;      /* subtle, darker borders */
+  --accent: #4285F4;      /* keep Google Blue for brand */
+}
+
+/* Explicit light theme overrides (optional but keeps parity) */
+:root[data-theme="light"] {
+  --bg: #f7f9fc;
+  --surface: #ffffff;
+  --text: #0b1324;
+  --muted: #4b5563;
+  --border: #e6eaf0;
+  --accent: #4285F4;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-feature-settings: "ss01" on, "ss02" on;
+}
+
+/* Utilities */
+.gradient-text {
+  background: linear-gradient(90deg, var(--accent) 0%, #34A853 50%, #13B0EA 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: background-color 150ms ease-in-out, border-color 150ms ease-in-out, box-shadow 150ms;
+}
+.card:hover {
+  box-shadow: 0 8px 30px rgba(17,24,39,0.08);
+}

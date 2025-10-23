@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install Python deps",
+      "type": "shell",
+      "command": "./.venv/bin/pip install -r requirements.txt",
+      "group": "build"
+    },
+    {
+      "label": "Install Python deps (BioMind)",
+      "type": "shell",
+      "command": "./.venv/bin/pip install -r BioMind/requirements.txt",
+      "group": "build"
+    },
+    {
+      "label": "Reinstall Python deps (BioMind)",
+      "type": "shell",
+      "command": "./.venv/bin/pip install -r BioMind/requirements.txt",
+      "group": "build"
+    },
+    {
+      "label": "Run API (dev)",
+      "type": "shell",
+      "command": "./.venv/bin/python -m uvicorn api.server:app --host 0.0.0.0 --port 8025 --reload",
+      "options": { "cwd": "${workspaceFolder}/BioMind" },
+      "isBackground": true
+    },
+    {
+      "label": "Run Web (dev)",
+      "type": "shell",
+      "command": "/Users/mohneet/.nvm/versions/node/v22.20.0/bin/npm run dev",
+      "options": { "cwd": "${workspaceFolder}/web" },
+      "isBackground": true
+    },
+    {
+      "label": "Run API+Web",
+      "type": "shell",
+      "command": "echo 'Starting API and Web...'",
+      "dependsOn": ["Run API (dev)", "Run Web (dev)"]
+    }
+  ]
+}
