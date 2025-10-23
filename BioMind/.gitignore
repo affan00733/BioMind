@@ -1,0 +1,30 @@
+### Environments
+/.venv/
+/.venv311/
+/.python-version
+
+### Editor/IDE
+/.idea/
+.vscode/
+
+### Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+### Backups & temps
+*.bak
+*.old
+*.swp
+*.swo
+.DS_Store
+
+### Local data/cache (keep real data folder but ignore generated internals)
+data/**/tmp/
+data/**/cache/
+data/**/.cache/
+
+### Node/npm (if created by tools)
+node_modules/
+
